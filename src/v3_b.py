@@ -18,7 +18,7 @@ def run(seed, tc):
     itr = np.where(np.isin(s2, tr_p))[0]; ite = np.where(np.isin(s2, te_p))[0]
     cal = np.isin(s2[itr], cal_p); fit, cl = itr[~cal], itr[cal]
     if tc == "mixed":
-        Xtr_c = np.concatenate([np.abs(X2[itr]), X2[itr]]); conv = np.abs; ep = 13
+        Xtr_c = np.concatenate([np.abs(X2[itr]), X2[itr]]); conv = np.abs; ep = max(1, int(np.ceil(EPOCHS / 2)))
     else:
         conv = np.abs if tc == "rectified" else (lambda X: X); Xtr_c = conv(X2[itr]); ep = EPOCHS
     mu, sd = norm_fit(Xtr_c); lo, hi = float(Xtr_c.min()), float(Xtr_c.max())
@@ -35,7 +35,10 @@ def run(seed, tc):
     conds = make_conditions(conv, mu, sd, True, tc != "signed")
     if tc == "mixed": conds["signed (no rectification)"] = lambda X: N(X)
     yt = y2[ite]; R = dict(seed=seed, train=tc, test=te_p.tolist(), n_test=len(ite),
-                           n_fit=len(fit), n_cal=len(cl), cond={}, counts_test=np.bincount(yt, minlength=3).tolist())
+                           n_fit=len(fit), n_cal=len(cl), cond={}, counts_test=np.bincount(yt, minlength=3).tolist(),
+                           epochs=ep, optimizer_updates=ep*int(np.ceil(len(Xtr_c)/BATCH)),
+                           reference_updates=EPOCHS*int(np.ceil(len(itr)/BATCH)),
+                           train_participants=tr_p.tolist(), calibration_participants=cal_p.tolist())
     ref = None
     for nm, f in conds.items():
         Xin = f(X2[ite]); Z = Zs(Xin); p, sc = pstats(base, gate, Z)

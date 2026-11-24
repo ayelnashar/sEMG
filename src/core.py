@@ -1,10 +1,10 @@
 import os, sys, time, json, math, glob, re, warnings
 import numpy as np, torch
-warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", message="enable_nested_tensor is True")
 DEV = "cuda" if torch.cuda.is_available() else "cpu"
 torch.backends.cuda.matmul.allow_tf32 = False; torch.backends.cudnn.allow_tf32 = False
 torch.backends.cudnn.benchmark = False
-if DEV == "cpu": torch.set_num_threads(max(1, int(os.environ.get("EMG_THREADS", os.cpu_count() or 2))))
+if DEV == "cpu": torch.set_num_threads(max(1, int(os.environ.get("EMG_THREADS", 2))))
 DATA = os.environ.get("EMG_DATA", os.path.dirname(os.path.abspath(__file__)))
 EPOCHS=int(os.environ.get("EPOCHS",25)); BATCH=64
 PATCH, N_TOK, D_MODEL, N_LAYER, N_HEAD = 20, 50, 96, 3, 4
@@ -133,6 +133,8 @@ def fit_envelope(Zf, yf, Zc, yc, k, seed=42, delta=DELTA):
 
 class Gate:
     def fit(s, Z, y, k, ridge=COV_RIDGE, pct=OOD_PCT):
+        if not np.isfinite(Z).all() or set(np.unique(y)) != set(range(k)):
+            raise ValueError("Density fitting requires finite features and every training class")
         s.mu = np.stack([Z[y==c].mean(0) for c in range(k)])
         C = np.zeros((Z.shape[1],)*2)
         for c in range(k):
@@ -157,10 +159,26 @@ def stats_all(env, gate, Z, base):
                    energy=-(np.log(np.exp(lg/T).sum(1))*T),
                    ensemble=P.var(0)[np.arange(len(mp)), mp])
 
-def aurc(sc, correct, n=60):
-    o = np.argsort(sc); c = correct[o]; cov = np.linspace(0.05,1,n)
+def aurc_legacy(sc, correct, n=60):
+    o = np.argsort(sc); c = np.asarray(correct)[o]; cov = np.linspace(0.05, 1, n)
     risk = np.array([1-c[:max(1,int(round(f*len(c))))].mean() for f in cov])
     return float(np.trapezoid(risk, cov)/(cov[-1]-cov[0]))
+
+def aurc(sc, correct, n=60):
+    """Normalized partial AURC on [0.05,1], expected risk within exact score ties."""
+    sc, correct = np.asarray(sc), np.asarray(correct, dtype=float)
+    if len(sc) != len(correct) or not len(sc) or not np.isfinite(sc).all():
+        raise ValueError("AURC requires aligned nonempty finite score arrays")
+    order = np.argsort(sc, kind="stable"); scores, corr = sc[order], correct[order]
+    starts = np.r_[0, np.flatnonzero(np.diff(scores)) + 1]
+    ends = np.r_[starts[1:], len(scores)]
+    means = np.add.reduceat(corr, starts) / (ends-starts)
+    expected = np.repeat(means, ends-starts)
+    cumulative = np.cumsum(expected)
+    cov = np.linspace(0.05,1,n)
+    counts = np.maximum(1, np.rint(cov*len(scores)).astype(int))
+    risk = 1-cumulative[counts-1]/counts
+    return float(np.trapezoid(risk,cov)/(cov[-1]-cov[0]))
 
 def ece(p, y, bins=15):
     conf, pred = p.max(1), p.argmax(1); acc = (pred==y).astype(float)

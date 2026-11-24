@@ -1,4 +1,4 @@
-"""Participant-clustered bootstrap intervals (R1.11), from the saved main-split encoders."""
+"""Participant-clustered bootstrap intervals, from the saved main-split encoders."""
 import sys, os
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 RES = os.environ.get("EMG_RES", os.path.join(HERE, "results"))
@@ -8,7 +8,7 @@ from lib3 import fit_probe, pstats
 from sklearn.metrics import roc_auc_score, balanced_accuracy_score
 OUT = os.path.join(RES, "v3_a")
 SEEDS = [int(s) for s in os.environ.get("SEEDS", "42,43,44,45,46,47,48,49,50,51").split(",")]
-NB = int(os.environ.get("NBOOT", 1000))
+NB = int(os.environ.get("NBOOT", 2000))
 st3, tg3 = sub3("source_test"), sub3("target")
 per_seed = []
 for seed in SEEDS:

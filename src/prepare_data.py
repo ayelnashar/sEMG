@@ -1,6 +1,7 @@
 """Parse both public datasets into d1.npz (Dataset A) and d2.npz (Dataset B).
 Usage: python prepare_data.py <dataset_A_root_with_subject_dirs> <dataset_B_repo_root>"""
-import os, re, sys, glob, numpy as np, scipy.io as sio, pandas as pd
+import os, re, sys, glob, json, warnings, numpy as np, scipy.io as sio, pandas as pd
+PARSE_ISSUES = []
 
 OUT = os.environ.get("EMG_DATA", os.path.dirname(os.path.abspath(__file__)))
 N_T, N_CH, N_CLASS = 1000, 8, 6
@@ -34,12 +35,16 @@ MAX_WIN_PER_LABEL = 2
 def parse_b_file(path):
     try:
         a = pd.read_csv(path, header=None, dtype=np.int16).values
-    except Exception:
+    except Exception as exc:
+        PARSE_ISSUES.append({"file": str(path), "reason": str(exc)})
+        warnings.warn(f"Excluded unreadable file {path}: {exc}")
         return []
-    if a.shape[1] != 9 or len(a) < N_T: return []
+    if a.shape[1] != 9 or len(a) < N_T:
+        PARSE_ISSUES.append({"file": str(path), "reason": f"invalid shape {a.shape}"})
+        return []
     emg, lab = a[:, :8].astype(np.float32), a[:, 8]          # cast before any absolute value
     out, i, taken, n = [], 0, {}, len(lab)
-    while i < n - N_T:
+    while i <= n - N_T:  # include a full window ending at the final sample
         L = lab[i]
         if L not in D2_MAP: i += N_T // 2; continue
         if (lab[i:i + N_T] == L).all():                     # window must not cross a label change
@@ -69,5 +74,6 @@ if __name__ == "__main__":
     print(f"Dataset A: {X.shape}, range {X.min():.0f} to {X.max():.0f}, class counts {np.bincount(y).tolist()}")
     X, y, s, ss = load_b(sys.argv[2])
     np.savez_compressed(os.path.join(OUT, "d2.npz"), X=X, y=y, subj=s, sess=ss)
+    with open(os.path.join(OUT, "parse_issues.json"), "w") as f: json.dump(PARSE_ISSUES, f, indent=2)
     print(f"Dataset B: {X.shape}, range {X.min():.0f} to {X.max():.0f}, participants {len(np.unique(s))}, "
           f"class counts {np.bincount(y).tolist()}")

@@ -9,6 +9,14 @@ E = RES
 ld = lambda pat: [pickle.load(open(f, "rb")) for f in sorted(glob.glob(f"{E}/{pat}"))]
 A = ld("v3_a/a_*.pkl"); S = ld("v3_s/s_*.pkl"); import os; NV = ld(os.environ.get("NVD", "v3_n") + "/n_*.pkl"); W = ld(os.environ.get("WD", "v3_w") + "/w_*.pkl")
 B = {tc: ld(f"v3_b/{tc}_*.pkl") for tc in ["rectified", "signed", "mixed"]}
+def check_count(name, records, expected):
+    if len(records) != expected:
+        raise RuntimeError(f"Incomplete {name}: {len(records)} files, expected {expected}")
+check_count("A", A, len(os.environ.get("SEEDS_A","42,43,44,45,46,47,48,49,50,51").split(",")))
+check_count("splits", S, int(os.environ.get("NS",10)))
+check_count("novelty", NV, len(os.environ.get("SEEDS_N","42,43,44,45,46").split(","))*int(os.environ.get("NPAIRS",4)))
+check_count("200ms", W, len(os.environ.get("SEEDS_W","42,43,44,45,46").split(",")))
+for tc,rr in B.items(): check_count("B "+tc, rr, len(os.environ.get("SEEDS_B","0,1,2,3,4,5,6,7,8,9").split(",")))
 LDA = pickle.load(open(f"{E}/v3_lda.pkl", "rb"))
 N = dict(nA=len(A), nS=len(S), nNV=len(NV), nW=len(W), nB={k: len(v) for k, v in B.items()})
 ms = lambda v: (float(np.nanmean(v)), float(np.nanstd(v)))
@@ -132,7 +140,8 @@ rng = np.random.RandomState(0); parts = A[0]["target"]["part"] if "part" in A[0]
 import core
 TG = core.IDX["target"]; part = core.s1[TG]; uniq = np.unique(part); idxs = {u: np.where(part == u)[0] for u in uniq}
 diffs = {k: [] for k in ["density", "entropy", "margin", "energy"]}
-for _ in range(2000):
+NB = int(os.environ.get("NBOOT", 2000))
+for _ in range(NB):
     pick = rng.choice(uniq, len(uniq), replace=True); ix = np.concatenate([idxs[u] for u in pick])
     acc = {k: 0.0 for k in diffs}
     for r in A:
@@ -143,15 +152,24 @@ for _ in range(2000):
 N["boot"] = {}
 for k, dd in diffs.items():
     dd = np.array(dd); lo, md, hi = np.percentile(dd, [2.5, 50, 97.5])
-    p = max(2 * min((dd <= 0).mean(), (dd >= 0).mean()), 1 / 2001)
-    N["boot"][k] = dict(d=float(md), lo=float(lo), hi=float(hi), p=float(p))
+    p = min(1.0, 2 * (min(int((dd <= 0).sum()), int((dd >= 0).sum())) + 1) / (len(dd) + 1))
+    observed = np.mean([r["target"]["aurc"][k] - r["target"]["aurc"]["confidence"] for r in A])
+    N["boot"][k] = dict(d=float(observed), median=float(md), lo=float(lo), hi=float(hi), p=float(p), nboot=NB)
     tests[f"{k.capitalize()} vs max softmax, error ranking"] = p
 names = list(tests); p = np.array([tests[k] for k in names]); m = len(p)
 o = np.argsort(p); q = np.empty(m); prev = 1.0
 for rank, i in reversed(list(enumerate(o, 1))):
     prev = min(prev, p[i] * m / rank); q[i] = prev
 N["tests"] = [dict(name=names[i], p=float(p[i]), bonf=float(min(1, p[i] * m)), q=float(q[i])) for i in o]
+N["participant_ci"] = pickle.load(open(f"{E}/v3_ci.pkl", "rb"))
+wp = pickle.load(open(f"{E}/v3_within.pkl", "rb"))
+wp_means = np.mean(list(wp.values()), axis=0)
+N["within_participant"] = dict(mean=float(wp_means.mean()), sd=float(wp_means.std()), seeds=list(wp))
+N["accept_mismatch_at075"] = ms([r["ladder3"]["mismatch"]["accept_at_conf075"] for r in A])
+N["tie_sensitivity"] = {k: dict(mean_legacy=float(np.mean([r["target"]["tie_sensitivity"][k]["legacy"] for r in A])), mean_neutral=N["aurc"][k][0]) for k in STATS}
+N["protocol"] = dict(nboot=NB, parser="inclusive_terminal_window", aurc="tie_neutral_normalized_partial", mixed_epochs="ceil(EPOCHS/2); not exact step matching")
 pickle.dump(N, open(f"{E}/N.pkl", "wb"))
+with open(f"{E}/numbers.json", "w") as fh: json.dump(N, fh, indent=2)
 print(json.dumps({k: N[k] for k in ["nA", "nS", "nNV", "nW", "nB"]}))
 for t in N["tests"]: print(f"  {t['name']:48s} p={t['p']:.2e} q={t['q']:.2e} bonf={t['bonf']:.2e}")
 # per-participant cross-participant results (Table XIII)

@@ -7,6 +7,8 @@ from core import Baseline, Gate, ece, aurc
 def fit_probe(Zf, yf, Zc, yc, k, seed=42):
     """Multinomial linear probe (AdamW, 300 full-batch steps) followed by
     temperature scaling on the calibration participants (L-BFGS)."""
+    if set(np.unique(yf)) != set(range(k)) or not np.isfinite(Zf).all():
+        raise ValueError("Probe fitting requires finite features and every training class")
     torch.manual_seed(seed)
     base = Baseline(Zf.shape[1], k)
     Z, Y = torch.from_numpy(Zf), torch.from_numpy(yf)

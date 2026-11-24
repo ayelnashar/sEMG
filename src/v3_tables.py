@@ -61,7 +61,7 @@ save("table11_per_participant", ["Participant", "Accuracy", "Balanced acc.", "Me
 save("table12_tests", ["Test", "p", "Bonferroni", "BH q", "Survives"],
      [[t["name"], f"{t['p']:.2e}", f"{t['bonf']:.2e}", f"{t['q']:.2e}", t["q"] < 0.05] for t in N["tests"]])
 MM = L["mismatch"]
-print("Headline numbers (values reported in the paper in brackets):")
+print("Headline numbers (previous V12 values in brackets; corrected-parser results may differ):")
 print(f"  mismatch balanced acc.            {f3(MM['bal'])}   [0.342 ± 0.016]")
 print(f"  mismatch max-softmax AUROC        {f3(MM['auroc']['confidence'])}   [0.179 ± 0.093]")
 print(f"  mismatch density AUROC            {f3(MM['auroc']['density'])}   [0.671 ± 0.013]")
@@ -69,3 +69,10 @@ print(f"  within B, rect->signed MSP AUROC  {f3(RB['signed (no rectification)'][
 print(f"  gain x0.1 MSP / density AUROC     {g3(S['gain x0.1']['auroc']['confidence'])} / {g3(S['gain x0.1']['auroc']['density'])}   [0.174 / 0.378]")
 print(f"  harmful acceptance, none -> all   {100 * C['none']['harmful'][0]:.1f}% -> {100 * C['range + density + confidence']['harmful'][0]:.1f}%   [22.9% -> 3.3%]")
 print(f"  tables written to {OUT}")
+
+from core import X1, y1, s1, ss1, X2, y2, s2, IDX
+rows = [[k, len(ix), "/".join(map(str,np.bincount(y1[ix],minlength=6)))] for k,ix in IDX.items()]
+rows += [["Dataset B",len(y2),"/".join(map(str,np.bincount(y2,minlength=3)))]]
+save("table02_counts", ["Partition","Windows","Class counts"], rows)
+save("audit_intervals", ["Metric","Lower95","Upper95"], [[k,*v] for k,v in N["participant_ci"].items()])
+save("audit_aurc_ties", ["Statistic","Legacy AURC","Tie neutral AURC"], [[k,v["mean_legacy"],v["mean_neutral"]] for k,v in N["tie_sensitivity"].items()])

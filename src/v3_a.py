@@ -51,6 +51,8 @@ def run(seed):
             R[nm]["aurc"] = {k: aurc(sc[k], corr) for k in STATS}
             R[nm]["scores"] = {k: sc[k].astype(np.float32) for k in STATS}
             R[nm]["correct"] = corr.astype(np.float32)
+            R[nm]["part"] = s1[v].copy()
+            R[nm]["tie_sensitivity"] = {k: dict(legacy=aurc_legacy(sc[k], corr), neutral=aurc(sc[k], corr), unique=int(len(np.unique(sc[k]))), n=len(sc[k])) for k in STATS}
             R["per_participant"] = {int(j): dict(acc=float(corr[s1[v] == j].mean()),
                                                  bal=float(balanced_accuracy_score(y1[v][s1[v] == j], p.argmax(1)[s1[v] == j])),
                                                  conf=float(p.max(1)[s1[v] == j].mean())) for j in range(21, 31)}
@@ -91,6 +93,7 @@ def run(seed):
         else:
             r["auroc"] = {k: auroc(ref[k], s3[k]) for k in s3}
             r["tpr5"] = {k: tpr_at(ref[k], s3[k]) for k in STATS}
+        r["accept_at_conf075"] = float((p3.max(1) >= 0.75).mean())
         L[nm] = r
     R["ladder3"] = L
 
@@ -119,8 +122,10 @@ def run(seed):
         x = torch.from_numpy(Xn1[:1]).to(DEV); enc.eval()
         with torch.no_grad():
             for _ in range(5): enc(x)
+            if DEV == "cuda": torch.cuda.synchronize()
             t1 = time.perf_counter()
             for _ in range(300): enc(x)
+            if DEV == "cuda": torch.cuda.synchronize()
             lat = (time.perf_counter() - t1) / 300
         zz = Z[:1]; t1 = time.perf_counter()
         for _ in range(3000): gate.score(zz)

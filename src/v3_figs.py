@@ -28,7 +28,7 @@ ax[1].errorbar(x, [L[c]["conf"][0] for c in conds], [L[c]["conf"][1] for c in co
 ax[1].errorbar(x, [L[c]["bal"][0] for c in conds], [L[c]["bal"][1] for c in conds], marker="s", ms=3.5, color=CD, capsize=2, label="balanced accuracy")
 ax[1].set_ylabel("value"); ax[1].set_title("(b) confidence rises as accuracy falls"); ax[1].legend(loc="lower left", frameon=False)
 ax[2].bar(x, [L[c]["refusal"][0] * 100 for c in conds], 0.6, yerr=[L[c]["refusal"][1] * 100 for c in conds], color="#8fa9c9", edgecolor="#333", lw=0.4, capsize=2)
-ax[2].set_ylabel("refusal rate (%)"); ax[2].set_title("(c) refusal is not monotone in severity")
+ax[2].set_ylabel("refusal rate (%)"); ax[2].set_title("(c) refusal across evaluation conditions")
 for a in ax: a.set_xticks(x); a.set_xticklabels(lbl, fontsize=5.8); a.grid(alpha=0.25, axis="y")
 fig.tight_layout(h_pad=0.8); fig.savefig(f"{OUT}/fig2.png"); plt.close(fig)
 
@@ -162,3 +162,20 @@ ax.set_ylabel("density detection AUROC"); ax.grid(alpha=0.25, axis="y")
 ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.28), ncol=3, frameon=False, fontsize=5.6)
 fig.tight_layout(); fig.savefig(f"{OUT}/fig10.png"); plt.close(fig)
 print("figures written")
+
+# Fig. 1: explicit branching; the two B conditions use the same recordings.
+from matplotlib.patches import FancyBboxPatch
+from core import X2
+fig, ax = plt.subplots(figsize=(3.4, 2.7)); ax.set_xlim(0,1); ax.set_ylim(0,1); ax.axis('off')
+def box(x,y,w,h,title,detail,color):
+    ax.add_patch(FancyBboxPatch((x,y),w,h,boxstyle='round,pad=0.006',facecolor=color,edgecolor='#333',lw=.6))
+    ax.text(x+w/2,y+h*.68,title,ha='center',va='center',fontsize=7,fontweight='bold')
+    ax.text(x+w/2,y+h*.28,detail,ha='center',va='center',fontsize=6)
+def arrow(x1,y1,x2,y2):ax.annotate('',xy=(x2,y2),xytext=(x1,y1),arrowprops=dict(arrowstyle='-|>',color='#333',lw=.7))
+box(.12,.79,.76,.16,'Source training','A: participants 1–20, sessions 1–4; n = 1600','#dfe8f5')
+box(.12,.56,.76,.16,'Held-out session','A: participants 1–20, session 5; n = 400','#dfe8f5')
+box(.12,.33,.76,.16,'New participants','A: participants 21–30; n = 1000','#f5ead7')
+box(.015,.05,.455,.17,'B rectified',f'Same B recordings; n = {len(X2)}','#f7ddd7')
+box(.53,.05,.455,.17,'B signed',f'Same B recordings; n = {len(X2)}','#efcac2')
+arrow(.5,.79,.5,.72);arrow(.5,.56,.5,.49);arrow(.5,.33,.24,.22);arrow(.5,.33,.76,.22)
+fig.tight_layout(pad=.3);fig.savefig(f'{OUT}/fig1.png');plt.close(fig)

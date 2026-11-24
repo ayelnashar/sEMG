@@ -1,13 +1,13 @@
 Test,p,Bonferroni,BH q,Survives
-"Density detects mismatch, A to B",2.18e-11,2.62e-10,2.62e-10,True
-"Harmful acceptance, layered vs confidence",2.73e-10,3.27e-09,1.64e-09,True
-Cross-dataset balanced acc. above chance,6.24e-09,7.48e-08,2.49e-08,True
-"Confidence inverted under mismatch, A to B",3.45e-08,4.14e-07,1.03e-07,True
-"Detection, block 2 vs output",4.72e-07,5.66e-06,1.13e-06,True
-"Confidence inverted under mismatch, within B",5.75e-06,6.90e-05,1.15e-05,True
-"Density detects mismatch, within B",1.28e-04,1.54e-03,2.19e-04,True
-"Energy vs max softmax, error ranking",5.00e-04,6.00e-03,7.50e-04,True
-"Density vs max softmax, error ranking",2.00e-03,2.40e-02,2.67e-03,True
-"Entropy vs max softmax, error ranking",2.13e-01,1.00e+00,2.56e-01,False
-"Margin vs max softmax, error ranking",6.42e-01,1.00e+00,7.00e-01,False
+"Confidence inverted under mismatch, within B",2.92e-13,3.50e-12,3.50e-12,True
+"Density detects mismatch, A to B",2.24e-11,2.69e-10,1.34e-10,True
+"Harmful acceptance, layered vs confidence",2.73e-10,3.27e-09,1.09e-09,True
+Cross-dataset balanced acc. above chance,2.78e-09,3.33e-08,8.33e-09,True
+"Confidence inverted under mismatch, A to B",3.51e-08,4.21e-07,8.42e-08,True
+"Detection, block 2 vs output",4.72e-07,5.66e-06,9.43e-07,True
+"Density detects mismatch, within B",1.45e-04,1.74e-03,2.48e-04,True
+"Energy vs max softmax, error ranking",1.00e-03,1.20e-02,1.50e-03,True
+"Density vs max softmax, error ranking",3.00e-03,3.60e-02,4.00e-03,True
+"Entropy vs max softmax, error ranking",2.14e-01,1.00e+00,2.57e-01,False
+"Margin vs max softmax, error ranking",6.43e-01,1.00e+00,7.01e-01,False
 "Balanced acc., output vs projection",8.39e-01,1.00e+00,8.39e-01,False
