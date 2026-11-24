@@ -1,0 +1,8 @@
+Condition,Learned bal.,LDA bal.,Learned max softmax AUROC,LDA max softmax AUROC,LDA density AUROC
+A source test (6),0.834,0.857,ref.,ref.,ref.
+A gain x0.1 (6),0.167,0.167,0.174,0.071,0.999
+A envelope 150 ms (6),0.834,0.333,0.480,0.338,1.000
+A to B rectified (3),0.548,0.481,0.694,0.573,0.911
+A to B signed (3),0.342,0.539,0.179,0.679,1.000
+Within B matched (3),0.693,0.707,ref.,ref.,ref.
+Within B signed (3),0.349,0.682,0.089,0.617,0.992

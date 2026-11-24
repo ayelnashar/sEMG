@@ -1,0 +1,7 @@
+Gate,Clean accepted %,Faulty accepted %,Balanced acc. accepted,Harmful %
+none,100.0,100.0,0.570,22.9 ± 1.4
+confidence,88.9,83.7,0.602,16.4 ± 1.5
+density,86.0,71.0,0.577,13.6 ± 1.1
+range check,100.0,46.8,0.630,8.0 ± 0.8
+range + density,86.0,36.2,0.632,4.3 ± 0.6
+range + density + confidence,76.4,32.9,0.657,3.3 ± 0.6

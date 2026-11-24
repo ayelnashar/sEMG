@@ -1,0 +1,7 @@
+Partition,Pooled acc.,Balanced acc.,Refusal,Mean conf.,Refused gap (points)
+Source test,0.971,0.950 ± 0.006,0.131,0.960,14.5
+Cross-participant,0.911,0.854 ± 0.023,0.170,0.926,23.1
+Cross-dataset,0.803,0.548 ± 0.022,0.345,0.894,10.5
+Conditioning mismatch,0.835,0.342 ± 0.016,0.190,0.988,-1.0
+Six-class source test,0.895,0.834 ± 0.010,0.103,0.874,11.2
+Six-class cross-participant,0.804,0.713 ± 0.008,0.138,0.835,4.0
