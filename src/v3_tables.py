@@ -61,11 +61,11 @@ save("table11_per_participant", ["Participant", "Accuracy", "Balanced acc.", "Me
 save("table12_tests", ["Test", "p", "Bonferroni", "BH q", "Survives"],
      [[t["name"], f"{t['p']:.2e}", f"{t['bonf']:.2e}", f"{t['q']:.2e}", t["q"] < 0.05] for t in N["tests"]])
 MM = L["mismatch"]
-print("Headline numbers (previous V12 values in brackets; corrected-parser results may differ):")
-print(f"  mismatch balanced acc.            {f3(MM['bal'])}   [0.342 ± 0.016]")
-print(f"  mismatch max-softmax AUROC        {f3(MM['auroc']['confidence'])}   [0.179 ± 0.093]")
+print("Headline numbers (values reported in the paper in brackets; a QUICK run will not match):")
+print(f"  mismatch balanced acc.            {f3(MM['bal'])}   [0.342 ± 0.015]")
+print(f"  mismatch max-softmax AUROC        {f3(MM['auroc']['confidence'])}   [0.179 ± 0.094]")
 print(f"  mismatch density AUROC            {f3(MM['auroc']['density'])}   [0.671 ± 0.013]")
-print(f"  within B, rect->signed MSP AUROC  {f3(RB['signed (no rectification)']['auroc']['confidence'])}   [0.089 ± 0.131]")
+print(f"  within B, rect->signed MSP AUROC  {f3(RB['signed (no rectification)']['auroc']['confidence'])}   [0.031 ± 0.022]")
 print(f"  gain x0.1 MSP / density AUROC     {g3(S['gain x0.1']['auroc']['confidence'])} / {g3(S['gain x0.1']['auroc']['density'])}   [0.174 / 0.378]")
 print(f"  harmful acceptance, none -> all   {100 * C['none']['harmful'][0]:.1f}% -> {100 * C['range + density + confidence']['harmful'][0]:.1f}%   [22.9% -> 3.3%]")
 print(f"  tables written to {OUT}")
